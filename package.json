@@ -1,8 +1,10 @@
 {
-  "dependencies": {
-    "cheerio": "latest",
-    "request": "latest",
-    "sqlite3": "latest",
-    "source-map-support": "^0.3.2"
-  }
+	"dependencies": {
+		"cheerio": "latest",
+		"request": "latest",
+		"sqlite3": "latest",
+		"libxmljs": "latest",
+		"text-tokenize": "latest",
+		"source-map-support": "^0.3.2"
+	}
 }
