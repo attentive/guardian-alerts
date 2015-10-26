@@ -1,0 +1,5 @@
+# Ignore output of scraper
+data.sqlite
+node_modules
+._*
+
