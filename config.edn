@@ -1,0 +1,2 @@
+{:rss-feed "http://www.theguardian.com/au/rss"
+ :db-file "data.sqlite"}
