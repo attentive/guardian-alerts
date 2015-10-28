@@ -1,50 +1,100 @@
 (ns guardian-alerts.core
-  (:require [cljs.core.async :refer [put! <! chan]]
+  (:require [cljs.core.async :refer [put! <! chan close! <!]]
             [cljs.nodejs :as nodejs]
-            [guardian-alerts.db :refer [init-db update-row]]
+            [guardian-alerts.pipeline :refer [| coll| cond|]]
+            [guardian-alerts.db :refer [init-db analyse-db migrate-db update-row each-row repair-row]]
             [guardian-alerts.text :refer [slurp read-edn keywordize keyword-match]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (nodejs/enable-util-print!)
 
 (defonce request (js/require "request"))
+(defonce cheerio (js/require "cheerio"))
 (defonce libxmljs (js/require "libxmljs"))
 (defonce http (js/require "http"))
 
-(defn fetch-page [url callback]
-  (request url (fn [error response body] 
-                 (if error 
-                   (println "Error fetching page: " error)
-                   (callback body)))))
+; RSS and scraping
 
-(defn rss-item [frag]
+(defn fetch-page [url]
+  (let [out-chan (chan)]
+    (request url (fn [error response body] 
+                   (if error 
+                     (println "Error fetching page: " error)
+                     (do #_(println "Fetched page: " body)
+                         (put! out-chan body)))))
+    out-chan))
+
+(defn pipelined-fetch-page [in-chan url]
+  (let [out-chan (chan)]
+    (go (let [data (<! in-chan)] 
+          (request url (fn [error response body] 
+                         (if error 
+                           (println "Error fetching page: " error)
+                           (do #_(println "Fetched page: " body)
+                               (put! out-chan body)))))))
+    out-chan))
+
+(defn get-text [item path] (.text (.get item path)))
+
+(defn parse-rss-item [frag]
   (let [gt #(.text (.get %1 %2))
-        desc (gt frag "description")
-        link (gt frag "link")]
-    {:guid link
-     :link link
+        desc (gt frag "description")]
+    {:guid (gt frag "guid")
+     :link (gt frag "link")
      :description desc
      :keywords (keywordize desc)}))
 
-(defonce rss-chan (chan))
-(defn rss-items [url]
-  (fetch-page url
-              (fn [body]
-                (let [doc (.parseXml libxmljs body)
-                      items (.find doc "//item")
-                      get-text (fn [item path] (.text (.get item path)))]
-                  (put! rss-chan 
-                        (filter #(keyword-match (:keywords %)) (map rss-item items)))))))
+(defn rss-items [xml]
+  (let [doc (.parseXml libxmljs xml)]
+    (.find doc "//item")))
+
+(defn parse-article [html-text]
+  (let [$ (.load cheerio html-text)
+        article-text (.html $ ".content__article-body")]
+    {:article article-text
+     :article-keywords (keywordize article-text)}))
+
+(defn full-articles [in-chan]
+  (let [out-chan (chan)]
+    (go (while true
+          (let [item (<! in-chan)]
+            (put! out-chan (merge item (parse-article (<! (fetch-page (:link item)))))))))
+    out-chan))
+
+; DB
+
+(defn migrate [db]
+  (let [out-chan (chan)]
+    (migrate-db db (fn [] 
+                     (println "Migration complete.")
+                     (put! out-chan true)))
+    out-chan))
+
+(defn fetch-rows [db]
+  (let [out-chan (chan)]
+    (each-row db (fn [row-data] (put! out-chan row-data)))
+    out-chan))
+
+(defn broken-row [row-data]
+  (or (nil? (get row-data "article")) (nil? (get row-data "article_keywords"))))
 
 (defn -main [& args]
   (let [config (read-edn "config.edn") ; (first args) 
-        db (init-db (:db-file config))]
-    (rss-items (:rss-feed config))
-    (go (let [items (<! rss-chan)]
-          (doseq [item items]
-            (println (:link item))
-            (update-row db item))
-          (.close db)))))
+        db (init-db (:db-file config))
+        rss-url (:rss-feed config)
+        upsert-row (partial update-row db)]
+    (let [out-chan (-> (migrate db)
+                       (pipelined-fetch-page rss-url)
+                       (coll| rss-items)
+                       (| parse-rss-item)
+                       (cond| #(keyword-match (:keywords %)))
+                       (full-articles)
+                       (| upsert-row))]
+      (go (while true (println (<! out-chan)))))
+    #_(let [out-chan (-> (fetch-rows db)
+                       (cond| broken-row)
+                       (| (partial repair-row db)))]
+      (go (while true (println (<! out-chan)))))))
 
 (set! *main-cli-fn* -main)
 
