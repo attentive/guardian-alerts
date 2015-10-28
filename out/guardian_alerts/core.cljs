@@ -41,6 +41,7 @@
         desc (gt frag "description")]
     {:guid (gt frag "guid")
      :link (gt frag "link")
+     :title (gt frag "title")
      :description desc
      :keywords (keywordize desc)}))
 

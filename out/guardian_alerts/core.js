@@ -152,7 +152,7 @@ var gt = (function (p1__1367_SHARP_,p2__1368_SHARP_){
 return p1__1367_SHARP_.get(p2__1368_SHARP_).text();
 });
 var desc = gt.call(null,frag,"description");
-return new cljs.core.PersistentArrayMap(null, 4, [new cljs.core.Keyword(null,"guid","guid",-1152728289),gt.call(null,frag,"guid"),new cljs.core.Keyword(null,"link","link",-1769163468),gt.call(null,frag,"link"),new cljs.core.Keyword(null,"description","description",-1428560544),desc,new cljs.core.Keyword(null,"keywords","keywords",1526959054),guardian_alerts.text.keywordize.call(null,desc)], null);
+return new cljs.core.PersistentArrayMap(null, 5, [new cljs.core.Keyword(null,"guid","guid",-1152728289),gt.call(null,frag,"guid"),new cljs.core.Keyword(null,"link","link",-1769163468),gt.call(null,frag,"link"),new cljs.core.Keyword(null,"title","title",636505583),gt.call(null,frag,"title"),new cljs.core.Keyword(null,"description","description",-1428560544),desc,new cljs.core.Keyword(null,"keywords","keywords",1526959054),guardian_alerts.text.keywordize.call(null,desc)], null);
 });
 guardian_alerts.core.rss_items = (function guardian_alerts$core$rss_items(xml){
 var doc = guardian_alerts.core.libxmljs.parseXml(xml);

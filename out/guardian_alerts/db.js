@@ -9,7 +9,7 @@ guardian_alerts.db.init_db = (function guardian_alerts$db$init_db(filename){
 var db = (new guardian_alerts.db.sqlite3.Database(filename));
 return db.serialize(((function (db){
 return (function (){
-db.run("CREATE TABLE IF NOT EXISTS data (\n                              guid TEXT PRIMARY KEY NOT NULL, \n                              link TEXT, \n                              description TEXT, \n                              keywords TEXT,\n                              article TEXT,\n                              article_keywords TEXT\n                              )");
+db.run("CREATE TABLE IF NOT EXISTS data (\n                              guid TEXT PRIMARY KEY NOT NULL, \n                              link TEXT, \n                              description TEXT, \n                              keywords TEXT,\n                              article TEXT,\n                              article_keywords TEXT,\n                              title TEXT\n                              )");
 
 return db;
 });})(db))
@@ -35,7 +35,7 @@ return guardian_alerts.db.analyse_db.call(null,db,(function (rows){
 var has_col = cljs.core.set.call(null,cljs.core.map.call(null,(function (p1__29_SHARP_){
 return cljs.core.get.call(null,p1__29_SHARP_,"name");
 }),rows));
-var seq__34_38 = cljs.core.seq.call(null,new cljs.core.PersistentVector(null, 2, 5, cljs.core.PersistentVector.EMPTY_NODE, ["article","article_keywords"], null));
+var seq__34_38 = cljs.core.seq.call(null,new cljs.core.PersistentVector(null, 3, 5, cljs.core.PersistentVector.EMPTY_NODE, ["article","article_keywords","title"], null));
 var chunk__35_39 = null;
 var count__36_40 = (0);
 var i__37_41 = (0);
@@ -106,14 +106,15 @@ return callback.call(null,true);
 guardian_alerts.db.update_row = (function guardian_alerts$db$update_row(db,p__59){
 var map__62 = p__59;
 var map__62__$1 = ((((!((map__62 == null)))?((((map__62.cljs$lang$protocol_mask$partition0$ & (64))) || (map__62.cljs$core$ISeq$))?true:false):false))?cljs.core.apply.call(null,cljs.core.hash_map,map__62):map__62);
+var title = cljs.core.get.call(null,map__62__$1,new cljs.core.Keyword(null,"title","title",636505583));
 var guid = cljs.core.get.call(null,map__62__$1,new cljs.core.Keyword(null,"guid","guid",-1152728289));
 var link = cljs.core.get.call(null,map__62__$1,new cljs.core.Keyword(null,"link","link",-1769163468));
 var description = cljs.core.get.call(null,map__62__$1,new cljs.core.Keyword(null,"description","description",-1428560544));
 var keywords = cljs.core.get.call(null,map__62__$1,new cljs.core.Keyword(null,"keywords","keywords",1526959054));
 var article = cljs.core.get.call(null,map__62__$1,new cljs.core.Keyword(null,"article","article",-21685045));
 var article_keywords = cljs.core.get.call(null,map__62__$1,new cljs.core.Keyword(null,"article-keywords","article-keywords",1958564061));
-var stmt = db.prepare("INSERT OR REPLACE INTO data VALUES (?, ?, ?, ?, ?, ?)");
-stmt.run(guid,link,description,[cljs.core.str(keywords)].join(''),article,[cljs.core.str(article_keywords)].join(''));
+var stmt = db.prepare("INSERT OR REPLACE INTO data VALUES (?, ?, ?, ?, ?, ?, ?)");
+stmt.run(guid,link,description,[cljs.core.str(keywords)].join(''),article,[cljs.core.str(article_keywords)].join(''),title);
 
 stmt.finalize();
 
@@ -122,6 +123,7 @@ return [cljs.core.str("Processed "),cljs.core.str(guid)].join('');
 guardian_alerts.db.repair_row = (function guardian_alerts$db$repair_row(db,p__64){
 var map__67 = p__64;
 var map__67__$1 = ((((!((map__67 == null)))?((((map__67.cljs$lang$protocol_mask$partition0$ & (64))) || (map__67.cljs$core$ISeq$))?true:false):false))?cljs.core.apply.call(null,cljs.core.hash_map,map__67):map__67);
+var title = cljs.core.get.call(null,map__67__$1,new cljs.core.Keyword(null,"title","title",636505583));
 var guid = cljs.core.get.call(null,map__67__$1,new cljs.core.Keyword(null,"guid","guid",-1152728289));
 var link = cljs.core.get.call(null,map__67__$1,new cljs.core.Keyword(null,"link","link",-1769163468));
 var description = cljs.core.get.call(null,map__67__$1,new cljs.core.Keyword(null,"description","description",-1428560544));

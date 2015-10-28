@@ -11,7 +11,8 @@
                               description TEXT, 
                               keywords TEXT,
                               article TEXT,
-                              article_keywords TEXT
+                              article_keywords TEXT,
+                              title TEXT
                               )")
                      db))))
 
@@ -30,20 +31,20 @@
   (analyse-db db
               (fn [rows]
                 (let [has-col (set (map #(get % "name") rows))]
-                  (doseq [colnam ["article" "article_keywords"]]
+                  (doseq [colnam ["article" "article_keywords" "title"]]
                     (if (not (has-col colnam))
                       (do (println "Column" colnam "not found")
                           (add-column db colnam))
                       (println "Column" colnam "found")))
                   (callback true)))))
 
-(defn update-row [db {:keys [guid link description keywords article article-keywords]}] 
-  (let [stmt (.prepare db "INSERT OR REPLACE INTO data VALUES (?, ?, ?, ?, ?, ?)")]
-    (.run stmt guid link description (str keywords) article (str article-keywords))
+(defn update-row [db {:keys [title guid link description keywords article article-keywords]}] 
+  (let [stmt (.prepare db "INSERT OR REPLACE INTO data VALUES (?, ?, ?, ?, ?, ?, ?)")]
+    (.run stmt guid link description (str keywords) article (str article-keywords) title)
     (.finalize stmt)
     (str "Processed " guid)))
 
-(defn repair-row [db {:keys [guid link description keywords article article-keywords]}] 
+(defn repair-row [db {:keys [title guid link description keywords article article-keywords title]}] 
   (str "Repaired " guid))
 
 (defn each-row [db callback]
