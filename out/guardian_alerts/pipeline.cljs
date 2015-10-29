@@ -24,6 +24,11 @@
     (go (while true (>! out-chan (f (<! in-chan)))))
     out-chan))
 
+(defn async| [in-chan f]
+  (let [out-chan (chan)]
+    (go (while true (f (<! in-chan) (fn [res] (put! out-chan res)))))
+    out-chan))
+
 (defn seq| [in-chan f]
   (let [out-chan (chan)]
     (go (while true (let [coll (f (<! in-chan))]

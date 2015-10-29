@@ -36,9 +36,7 @@
                   (doseq [colnam ["article" "article_keywords" "title" "date" "creator"]]
                     (if (not (has-col colnam))
                       (do (println "column" colnam "not found")
-                          (add-column db colnam))
-                      (println "column" colnam "found")))
-                  (println "migration complete")
+                          (add-column db colnam))))
                   (callback true)))))
 
 (defn update-row [db {:keys [guid link description keywords article article-keywords title date creator]}] 
@@ -46,6 +44,9 @@
     (.run stmt guid link description (str keywords) article (str article-keywords) title date creator)
     (.finalize stmt)
     (str "processed " guid)))
+
+(defn missing-values [row-data]
+  (some nil? (vals row-data)))
 
 (defn repair-row [db {:keys [guid link description keywords article article-keywords title date creator]}] 
   (str "repaired " guid))

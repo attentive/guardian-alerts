@@ -47,7 +47,6 @@ cljs.core.println.call(null,"column",colnam_42,"not found");
 
 guardian_alerts.db.add_column.call(null,db,colnam_42);
 } else {
-cljs.core.println.call(null,"column",colnam_42,"found");
 }
 
 var G__43 = seq__34_38;
@@ -81,7 +80,6 @@ cljs.core.println.call(null,"column",colnam_54,"not found");
 
 guardian_alerts.db.add_column.call(null,db,colnam_54);
 } else {
-cljs.core.println.call(null,"column",colnam_54,"found");
 }
 
 var G__55 = cljs.core.next.call(null,seq__34_48__$1);
@@ -99,8 +97,6 @@ continue;
 }
 break;
 }
-
-cljs.core.println.call(null,"migration complete");
 
 return callback.call(null,true);
 }));
@@ -123,6 +119,9 @@ stmt.run(guid,link,description,[cljs.core.str(keywords)].join(''),article,[cljs.
 stmt.finalize();
 
 return [cljs.core.str("processed "),cljs.core.str(guid)].join('');
+});
+guardian_alerts.db.missing_values = (function guardian_alerts$db$missing_values(row_data){
+return cljs.core.some.call(null,cljs.core.nil_QMARK_,cljs.core.vals.call(null,row_data));
 });
 guardian_alerts.db.repair_row = (function guardian_alerts$db$repair_row(db,p__64){
 var map__67 = p__64;
