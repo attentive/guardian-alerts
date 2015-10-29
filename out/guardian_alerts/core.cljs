@@ -34,7 +34,7 @@
                                (put! out-chan body)))))))
     out-chan))
 
-(def DUBLINCORE (clj->js {"dc" "http://purl.org/dc/elements/1.1/"}))
+(def DUBLINCORE-NS #js {:dc "http://purl.org/dc/elements/1.1/"})
 
 (defn get-text 
   ([item path] (.text (.get item path)))
@@ -46,8 +46,8 @@
     {:guid (get-text frag "guid")
      :link (get-text frag "link")
      :title (get-text frag "title")
-     :date (get-text frag "dc:date" DUBLINCORE)
-     :creator (get-text frag "dc:creator" DUBLINCORE)
+     :date (get-text frag "dc:date" DUBLINCORE-NS)
+     :creator (get-text frag "dc:creator" DUBLINCORE-NS)
      :description desc
      :keywords (keywordize desc)}))
 
