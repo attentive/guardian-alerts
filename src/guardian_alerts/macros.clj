@@ -1,24 +1,33 @@
 (ns guardian-alerts.macros)
 
+(defmacro while-let
+  "Repeatedly executes body while test expression is true, evaluating the body with binding-form bound to the value of test."
+  [bindings & body]
+  (let [form (first bindings) test (second bindings)]
+    `(loop [~form ~test]
+       (when ~form
+         ~@body
+         (recur ~test)))))
+
 (defn- add-argument-last [form arg]
   `(~@form ~arg))
 
 (defn- callback [sc fc]
   `(fn [err# res#]
-    (cljs.core.async.macros/go
-      (if err#
-        (~'>! ~fc err#)
-        (~'>! ~sc res#)))))
+     (cljs.core.async.macros/go
+       (if err#
+         (~'>! ~fc err#)
+         (~'>! ~sc res#)))))
 
 (defn- success-value-or-throw [sc fc]
   `(let [[v# c#] (~'alts! [~sc ~fc])]
-      (try
-        (if (= c# ~sc)
-          v#
-          (throw (js/Error. v#)))
-        (finally
-          (cljs.core.async/close! ~sc)
-          (cljs.core.async/close! ~fc)))))
+     (try
+       (if (= c# ~sc)
+         v#
+         (throw (js/Error. v#)))
+       (finally
+         (cljs.core.async/close! ~sc)
+         (cljs.core.async/close! ~fc)))))
 
 (defn- transform [forms]
   (if (list? forms)
@@ -33,5 +42,5 @@
 
 (defmacro asynchronize [& forms]
   `(cljs.core.async.macros/go
-    ~@(map transform forms)))
+     ~@(map transform forms)))
 

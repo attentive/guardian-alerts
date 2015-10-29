@@ -1,7 +1,7 @@
 (ns guardian-alerts.core
   (:require [cljs.core.async :refer [put! <! chan close! <!]]
             [cljs.nodejs :as nodejs]
-            [guardian-alerts.pipeline :refer [| coll| cond|]]
+            [guardian-alerts.pipeline :refer [source| re-source| sink| | seq| cond|]]
             [guardian-alerts.db :refer [init-db analyse-db migrate-db update-row each-row repair-row]]
             [guardian-alerts.text :refer [slurp read-edn keywordize keyword-match]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -92,7 +92,7 @@
         upsert-row (partial update-row db)]
     (let [out-chan (-> (migrate db)
                        (pipelined-fetch-page rss-url)
-                       (coll| rss-items)
+                       (seq| rss-items)
                        (| parse-rss-item)
                        (cond| #(keyword-match (:keywords %)))
                        (full-articles)
