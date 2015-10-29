@@ -34,14 +34,20 @@
                                (put! out-chan body)))))))
     out-chan))
 
-(defn get-text [item path] (.text (.get item path)))
+(def DUBLINCORE (clj->js {"dc" "http://purl.org/dc/elements/1.1/"}))
+
+(defn get-text 
+  ([item path] (.text (.get item path)))
+  ([item path ns-uri]
+   (.text (.get item path ns-uri))))
 
 (defn parse-rss-item [frag]
-  (let [gt #(.text (.get %1 %2))
-        desc (gt frag "description")]
-    {:guid (gt frag "guid")
-     :link (gt frag "link")
-     :title (gt frag "title")
+  (let [desc (get-text frag "description")]
+    {:guid (get-text frag "guid")
+     :link (get-text frag "link")
+     :title (get-text frag "title")
+     :date (get-text frag "dc:date" DUBLINCORE)
+     :creator (get-text frag "dc:creator" DUBLINCORE)
      :description desc
      :keywords (keywordize desc)}))
 
