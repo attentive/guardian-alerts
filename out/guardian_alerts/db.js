@@ -18,7 +18,7 @@ return db;
 guardian_alerts.db.add_column = (function guardian_alerts$db$add_column(db,colnam){
 return db.serialize((function (){
 var stmt_28 = [cljs.core.str("ALTER TABLE data ADD COLUMN "),cljs.core.str(colnam),cljs.core.str(" TEXT")].join('');
-cljs.core.println.call(null,"Migration:",stmt_28);
+cljs.core.println.call(null,"migrated",[cljs.core.str("("),cljs.core.str(stmt_28),cljs.core.str(")")].join(''));
 
 db.run(stmt_28);
 
@@ -43,11 +43,11 @@ while(true){
 if((i__37_41 < count__36_40)){
 var colnam_42 = cljs.core._nth.call(null,chunk__35_39,i__37_41);
 if(cljs.core.not.call(null,has_col.call(null,colnam_42))){
-cljs.core.println.call(null,"Column",colnam_42,"not found");
+cljs.core.println.call(null,"column",colnam_42,"not found");
 
 guardian_alerts.db.add_column.call(null,db,colnam_42);
 } else {
-cljs.core.println.call(null,"Column",colnam_42,"found");
+cljs.core.println.call(null,"column",colnam_42,"found");
 }
 
 var G__43 = seq__34_38;
@@ -77,11 +77,11 @@ continue;
 } else {
 var colnam_54 = cljs.core.first.call(null,seq__34_48__$1);
 if(cljs.core.not.call(null,has_col.call(null,colnam_54))){
-cljs.core.println.call(null,"Column",colnam_54,"not found");
+cljs.core.println.call(null,"column",colnam_54,"not found");
 
 guardian_alerts.db.add_column.call(null,db,colnam_54);
 } else {
-cljs.core.println.call(null,"Column",colnam_54,"found");
+cljs.core.println.call(null,"column",colnam_54,"found");
 }
 
 var G__55 = cljs.core.next.call(null,seq__34_48__$1);
@@ -99,6 +99,8 @@ continue;
 }
 break;
 }
+
+cljs.core.println.call(null,"migration complete");
 
 return callback.call(null,true);
 }));
@@ -120,7 +122,7 @@ stmt.run(guid,link,description,[cljs.core.str(keywords)].join(''),article,[cljs.
 
 stmt.finalize();
 
-return [cljs.core.str("Processed "),cljs.core.str(guid)].join('');
+return [cljs.core.str("processed "),cljs.core.str(guid)].join('');
 });
 guardian_alerts.db.repair_row = (function guardian_alerts$db$repair_row(db,p__64){
 var map__67 = p__64;
@@ -134,7 +136,7 @@ var article_keywords = cljs.core.get.call(null,map__67__$1,new cljs.core.Keyword
 var title = cljs.core.get.call(null,map__67__$1,new cljs.core.Keyword(null,"title","title",636505583));
 var date = cljs.core.get.call(null,map__67__$1,new cljs.core.Keyword(null,"date","date",-1463434462));
 var creator = cljs.core.get.call(null,map__67__$1,new cljs.core.Keyword(null,"creator","creator",-1069241724));
-return [cljs.core.str("Repaired "),cljs.core.str(guid)].join('');
+return [cljs.core.str("repaired "),cljs.core.str(guid)].join('');
 });
 guardian_alerts.db.each_row = (function guardian_alerts$db$each_row(db,callback){
 return db.each("SELECT * FROM data",(function (err,row){

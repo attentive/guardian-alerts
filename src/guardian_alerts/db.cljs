@@ -21,7 +21,7 @@
 (defn add-column [db colnam]
   (.serialize db (fn []
                    (let [stmt (str "ALTER TABLE data ADD COLUMN " colnam " TEXT")]
-                     (println "Migration:" stmt)
+                     (println "migrated" (str "(" stmt ")"))
                      (.run db stmt))
                    db)))
 
@@ -35,19 +35,20 @@
                 (let [has-col (set (map #(get % "name") rows))]
                   (doseq [colnam ["article" "article_keywords" "title" "date" "creator"]]
                     (if (not (has-col colnam))
-                      (do (println "Column" colnam "not found")
+                      (do (println "column" colnam "not found")
                           (add-column db colnam))
-                      (println "Column" colnam "found")))
+                      (println "column" colnam "found")))
+                  (println "migration complete")
                   (callback true)))))
 
 (defn update-row [db {:keys [guid link description keywords article article-keywords title date creator]}] 
   (let [stmt (.prepare db "INSERT OR REPLACE INTO data VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")]
     (.run stmt guid link description (str keywords) article (str article-keywords) title date creator)
     (.finalize stmt)
-    (str "Processed " guid)))
+    (str "processed " guid)))
 
 (defn repair-row [db {:keys [guid link description keywords article article-keywords title date creator]}] 
-  (str "Repaired " guid))
+  (str "repaired " guid))
 
 (defn each-row [db callback]
   (.each db "SELECT * FROM data"

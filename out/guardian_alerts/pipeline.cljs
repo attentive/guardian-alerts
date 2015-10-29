@@ -5,13 +5,14 @@
 
 (defn source| [f & args]
   (let [out-chan (chan)]
-    (apply f (conj args [(fn [res] (put! out-chan res))]))
+    (apply f (concat args [(fn [res] (put! out-chan res))]))
     out-chan))
 
 (defn re-source| [in-chan f & args]
-  (let [out-chan (chan)]
-    (go (let [data (<! in-chan)]
-          (apply f (conj (args [(fn [res] (put! out-chan res))])))))
+  (let [out-chan (chan)
+        args* (concat args [(fn [res] (put! out-chan res))])] 
+    (go (<! in-chan)
+        (apply f args*))
     out-chan))
 
 (defn sink| [in-chan f]

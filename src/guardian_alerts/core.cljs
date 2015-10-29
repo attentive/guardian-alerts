@@ -1,7 +1,7 @@
 (ns guardian-alerts.core
   (:require [cljs.core.async :refer [put! <! chan close! <!]]
             [cljs.nodejs :as nodejs]
-            [guardian-alerts.pipeline :refer [source| re-source| sink| | seq| cond|]]
+            [guardian-alerts.pipeline :refer [source| sink| re-source| | seq| cond|]]
             [guardian-alerts.db :refer [init-db analyse-db migrate-db update-row each-row repair-row]]
             [guardian-alerts.text :refer [slurp read-edn keywordize keyword-match]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -15,6 +15,12 @@
 
 ; RSS and scraping
 
+(defn fetch-page* [url callback]
+  (request url (fn [error response body]
+                 (if error
+                   (println "fetch error" error)
+                   (callback body)))))
+
 (defn fetch-page [url]
   (let [out-chan (chan)]
     (request url (fn [error response body] 
@@ -22,16 +28,6 @@
                      (println "Error fetching page: " error)
                      (do #_(println "Fetched page: " body)
                          (put! out-chan body)))))
-    out-chan))
-
-(defn pipelined-fetch-page [in-chan url]
-  (let [out-chan (chan)]
-    (go (let [data (<! in-chan)] 
-          (request url (fn [error response body] 
-                         (if error 
-                           (println "Error fetching page: " error)
-                           (do #_(println "Fetched page: " body)
-                               (put! out-chan body)))))))
     out-chan))
 
 (def DUBLINCORE-NS #js {:dc "http://purl.org/dc/elements/1.1/"})
@@ -70,17 +66,6 @@
 
 ; DB
 
-(defn migrate [db]
-  (let [out-chan (chan)]
-    (migrate-db db (fn [] 
-                     (println "Migration complete.")
-                     (put! out-chan true)))
-    out-chan))
-
-(defn fetch-rows [db]
-  (let [out-chan (chan)]
-    (each-row db (fn [row-data] (put! out-chan row-data)))
-    out-chan))
 
 (defn broken-row [row-data]
   (or (nil? (get row-data "article")) (nil? (get row-data "article_keywords"))))
@@ -90,18 +75,18 @@
         db (init-db (:db-file config))
         rss-url (:rss-feed config)
         upsert-row (partial update-row db)]
-    (let [out-chan (-> (migrate db)
-                       (pipelined-fetch-page rss-url)
+    (let [out-chan (-> (source| migrate-db db)
+                       (re-source| fetch-page* rss-url)
                        (seq| rss-items)
                        (| parse-rss-item)
                        (cond| #(keyword-match (:keywords %)))
                        (full-articles)
                        (| upsert-row))]
       (go (while true (println (<! out-chan)))))
-    #_(let [out-chan (-> (fetch-rows db)
-                       (cond| broken-row)
-                       (| (partial repair-row db)))]
-      (go (while true (println (<! out-chan)))))))
+    #_(let [out-chan (-> (source| each-row db)
+                         (cond| broken-row)
+                         (| (partial repair-row db)))]
+        (go (while true (println (<! out-chan)))))))
 
 (set! *main-cli-fn* -main)
 
