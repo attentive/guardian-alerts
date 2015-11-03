@@ -26,7 +26,7 @@
      :link (get-text frag "link")
      :title (get-text frag "title")
      :date (get-text frag "dc:date" DUBLINCORE-NS)
-     :creator (get-text frag "dc:creator" DUBLINCORE-NS)
+     :author (get-text frag "dc:creator" DUBLINCORE-NS)
      :description desc
      :keywords (keywordize desc)}))
 
@@ -34,12 +34,16 @@
   (let [doc (.parseXml libxmljs xml)]
     (map parse-rss-item (.find doc "//item"))))
 
-(defn- parse-article [html-text]
+(defn parse-article [html-text]
   (let [$ (.load cheerio html-text)
+        link (.attr ($ "link[rel=canonical]") "href")
         article-text (.html $ ".content__article-body")]
-    {:article article-text
-     :article-keywords (keywordize article-text)}))
-
-(defn full-article [item html-text]
-  (merge item (parse-article html-text)))
+    {:link link
+     :guid link
+     :title (.attr ($ "meta[property='og:title']") "content")
+     :date (.attr ($ "meta[property='article:published_time']") "content")
+     :author (.attr ($ "meta[name=author]") "content")
+     :description (.attr ($ "meta[name=description]") "content")
+     :article article-text
+     :keywords (keywordize article-text)}))
 
